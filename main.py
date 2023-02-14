@@ -1,17 +1,20 @@
-import bayes
-# This is a sample Python script.
-
-# Press Mayús+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import re
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def query(p_query):
+    division = re.split("\|", p_query)
+    focus = division[0]
+    dado = division[1] if len(division) == 2 else None
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    query("A")
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+if __name__ == '__main__':
+    query("A")
+    query("-A")
+    query("A|B")
+    query("A|BC")
+    query("A|-BC")
+    query("A|B-C")
+    query("A|-B-C")
