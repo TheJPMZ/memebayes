@@ -1,22 +1,4 @@
 import re
-# nodes = ["R","T","A","J","M"]
-"""
-"R",pt={"R":0.001}
-"T",pt={"T":0.002}
-"A",parents=["R","T"],pt={"A|RT":0.95,"A|R-T":0.94,"A|-RT":0.29,"A|-R-T":0.001}
-"J",parents=["A"],pt={"J|A":0.9,"J|-A":0.5}
-"M",parents=["A"],pt={"M|A":0.7,"M|-A":0.01}
-
-"""
-from typing import Tuple
-
-table = {
-    "R": {
-        "prob": 0.001,
-        "parents": [],
-        "child": ["A"]
-    },
-}
 
 
 def check_probability(prob) -> bool:
@@ -38,7 +20,7 @@ class BayesNode:
         self.parents = parents or []
 
         if pt:
-            self.set_prob_table(table)
+            self.set_prob_table(pt)
 
     def set_parents(self, new_parents) -> None:
         self.parents = new_parents
@@ -48,12 +30,12 @@ class BayesNode:
         regex = "^-?[A-Za-z-](\|[A-Za-z-]+)?$"
 
         for x in table:
-            if not bool(re.match(regex,x)):
+            if not bool(re.match(regex, x)):
                 print(f"{x} doesn't match the correct format. Correct: (A|BC)")
                 return None
 
         for x in table.values():
-            if not isinstance(x,float):
+            if not isinstance(x, float):
                 print(f"Values need to be float. {x} isn't a float.")
                 return None
 
@@ -82,6 +64,9 @@ class BayesNode:
 
     def get_factors(self) -> dict:
         return self.prob_table
+
+    def prob(self) -> float:
+        return self.prob_table[self.name]
 
     def __eq__(self, name) -> bool:
         return self.name == name
@@ -146,6 +131,72 @@ class BayesNetwork:
 
     def show_factors(self):
         for node in self.nodes:
-            print(node.name,":",node.get_factors())
-            
-            
+            print(node.name, ":", node.get_factors())
+    
+    def get_node(self, node_name: str):
+        return [item for item in self.nodes if item == node_name][0]
+
+    def query(self, p_query: str):
+        division = re.split("\|", p_query)
+        variable, evidence = division
+        variable = [x for x in variable]
+        evidence = [x for x in evidence]
+
+        a = self.enumerate_ask(evidence, [])
+        b = self.enumerate_ask(variable, evidence)
+        return b/a
+
+
+        return
+
+
+
+
+
+    def enumerate_ask(self, variables, evidence):
+        ex = variables + evidence
+        new_list = []
+        count = 0
+        while len(self.nodes) > count:
+            for node in self.nodes:
+                if node in new_list:
+                    break
+                if len(node.parents) == 0:
+                    new_list.append(node)
+                    count += 1
+                else:
+                    test = False
+                    for parent in node.parents:
+                        if parent not in new_list:
+                            break
+                        test = True
+                    if test:
+                        new_list.append(node)
+                        count += 1
+
+        return self.enumerate_all(new_list, ex)
+
+
+
+
+    def enumerate_all(self, variables: list[BayesNode], evidence: list[str]):
+        if not variables:
+            return 1
+
+        y: BayesNode = variables.pop(0)
+        y_prob = y.name
+
+        if y.parents:
+            y_prob += f"|{''.join([str(elem) for elem in y.parents])}"
+
+        if y.name in evidence:
+            prob = y.prob()
+            return prob * self.enumerate_all(variables, evidence)
+        else:
+            p1 = y.prob_table[y_prob]
+            p2 = 1 - p1
+
+            return p1 * self.enumerate_all(variables, [*evidence, y.name]) + p2 * self.enumerate_all(variables, [*evidence, f"-{y.name}"])
+
+
+
