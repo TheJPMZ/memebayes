@@ -87,7 +87,7 @@ class BayesNode:
         return self.name == name
 
     def __str__(self) -> str:
-        return f"P({self.name}|{''.join([str(elem) for elem in self.parents])})".replace("|)",")")
+        return  f"P(%s|%s)"% (self.name, ''.join(self.parents))
 
     def __repr__(self) -> str:
         return "(Node {})".format(self.name)
@@ -147,3 +147,5 @@ class BayesNetwork:
     def show_factors(self):
         for node in self.nodes:
             print(node.name,":",node.get_factors())
+            
+            
