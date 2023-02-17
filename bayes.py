@@ -72,7 +72,7 @@ class BayesNode:
         return self.name == name
 
     def __str__(self) -> str:
-        return f"P({self.name}|{''.join([str(elem) for elem in self.parents])})".replace("|)", ")")
+        return  f"P(%s|%s)"% (self.name, ''.join(self.parents))
 
     def __repr__(self) -> str:
         return "(Node {})".format(self.name)
@@ -197,15 +197,6 @@ class BayesNetwork:
             p2 = 1 - p1
 
             return p1 * self.enumerate_all(variables, [*evidence, y.name]) + p2 * self.enumerate_all(variables, [*evidence, f"-{y.name}"])
-
-
-
-
-
-
-
-
-
 
 
 
