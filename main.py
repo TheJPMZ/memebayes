@@ -1,16 +1,5 @@
-import re
 from bayes import BayesNetwork
 
-
-def query(p_query):
-    division = re.split("\|", p_query)
-    focus = division[0]
-    dado = division[1] if len(division) == 2 else None
-    return focus, dado
-
-
-if __name__ == '__main__':
-    query("A")
 
 if __name__ == '__main__':
     net = BayesNetwork(["A","J","T","M","R"])
@@ -26,6 +15,3 @@ if __name__ == '__main__':
     print(net.show_factors())
 
     print(net.query("B|JM"))
-
-
-

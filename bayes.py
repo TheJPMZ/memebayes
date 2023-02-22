@@ -72,7 +72,7 @@ class BayesNode:
         return self.name == name
 
     def __str__(self) -> str:
-        return  f"P(%s|%s)"% (self.name, ''.join(self.parents))
+        return f"P({self.name}|{''.join([str(elem) for elem in self.parents])})".replace("|)", ")")
 
     def __repr__(self) -> str:
         return "(Node {})".format(self.name)
@@ -80,10 +80,21 @@ class BayesNode:
 
 class BayesNetwork:
     def __init__(self, nodes: list) -> None:
+        """Bayesian Network initialization
+
+        Args:
+            nodes (list): List of nodes to be added to the network
+        """
         self.nodes = [BayesNode(node) for node in nodes]
 
     def add_node(self, name: str, parents: list = None, pt: dict = None) -> None:
+        """Adds a node to the network, if the node already exists it will not be added
 
+        Args:
+            name (str): Name of the node, it should be a single letter for simplicity.
+            parents (list, optional): The parents of that node, they should be in the network. Defaults to None.
+            pt (dict, optional): Probability table of the node. Defaults to None. Ej. {"A": 0.2}
+        """
         if name in self.nodes:
             print("Node already in network")
             return None
@@ -93,7 +104,13 @@ class BayesNetwork:
         self.nodes.append(BayesNode(name, parents, pt))
 
     def edit_node(self, node_name: str, parents: list = None, pt: dict = None) -> None:
+        """Edits a node in the network, if the node doesn't exist it will not be edited
 
+        Args:
+            name (str): Name of the node, it should be a single letter for simplicity.
+            parents (list, optional): The parents of that node, they should be in the network. Defaults to None.
+            pt (dict, optional): Probability table of the node. Defaults to None. Ej. {"A": 0.2}
+        """
         if node_name not in self.nodes:
             print("Node not in network, to add a node use `add_node()`")
             return None
@@ -108,6 +125,10 @@ class BayesNetwork:
             node.set_parents(parents)
 
     def compact(self) -> str:
+        """
+        Returns:
+            str: Compact representation of the network
+        """
         order = []
         copy_nodes = self.nodes.copy()
         for x in self.nodes:
@@ -124,34 +145,41 @@ class BayesNetwork:
         return "".join([str(x) for x in order])
 
     def defined(self) -> bool:
+        """Checks if the network is defined
+        Returns:
+            bool: True if the network is defined, False otherwise
+        """
         for node in self.nodes:
             if not node.check_node():
                 return False
         return True
 
-    def show_factors(self):
-        for node in self.nodes:
-            print(node.name, ":", node.get_factors())
-    
-    def get_node(self, node_name: str):
-        return [item for item in self.nodes if item == node_name][0]
+    def query(self, p_query: str) -> float:
+        """Given a query, it returns the probability of the query
 
-    def query(self, p_query: str):
+        Args:
+            p_query (str): Query to be made, it should be in the format "A|BC" where A is the variable and BC are the evidence
+
+        Returns:
+            float: Probability of the query
+        """
         division = re.split("\|", p_query)
         variable, evidence = division
         variable = [x for x in variable]
         evidence = [x for x in evidence]
 
         a = self.enumerate_ask(evidence, [])
+        print(a)
         b = self.enumerate_ask(variable, evidence)
+        print(b)
         return b/a
 
+    def show_factors(self):
+        for node in self.nodes:
+            print(node.name, ":", node.get_factors())
 
-        return
-
-
-
-
+    def get_node(self, node_name: str):
+        return [item for item in self.nodes if item == node_name][0]
 
     def enumerate_ask(self, variables, evidence):
         ex = variables + evidence
@@ -163,7 +191,6 @@ class BayesNetwork:
                     break
                 if len(node.parents) == 0:
                     new_list.append(node)
-                    count += 1
                 else:
                     test = False
                     for parent in node.parents:
@@ -172,31 +199,31 @@ class BayesNetwork:
                         test = True
                     if test:
                         new_list.append(node)
-                        count += 1
+                count += 1
+        print(len(new_list))
 
         return self.enumerate_all(new_list, ex)
 
-
-
-
     def enumerate_all(self, variables: list[BayesNode], evidence: list[str]):
-        if not variables:
+        variablescopy = variables.copy()
+
+        if not variablescopy:
             return 1
 
-        y: BayesNode = variables.pop(0)
+        y: BayesNode = variablescopy.pop(0)
         y_prob = y.name
 
         if y.parents:
             y_prob += f"|{''.join([str(elem) for elem in y.parents])}"
 
         if y.name in evidence:
-            prob = y.prob()
-            return prob * self.enumerate_all(variables, evidence)
+            prob = y.prob_table[y_prob]
+            return prob * self.enumerate_all(variablescopy, evidence)
         else:
             p1 = y.prob_table[y_prob]
             p2 = 1 - p1
 
-            return p1 * self.enumerate_all(variables, [*evidence, y.name]) + p2 * self.enumerate_all(variables, [*evidence, f"-{y.name}"])
+            return p1 * self.enumerate_all(variablescopy, [*evidence, y.name]) + p2 * self.enumerate_all(variablescopy, [*evidence, f"-{y.name}"])
 
 
 
