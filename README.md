@@ -70,7 +70,8 @@ print(net.query("B")) # Query the network for the node B (0.001)
  
 print(net.query("B|JM")) # Query the network for the node B given that J and M are true (0.0007)
 ```
-
+### Graph image
+![imagen](https://user-images.githubusercontent.com/64183934/220893461-12586da5-ab6d-4c4c-a483-0020eb5ecbd4.png)
 
 
 
